@@ -1,0 +1,38 @@
+# Outputs
+outputs/
+*.png
+*.pdf
+analysis_results.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# API Keys (never commit these!)
+.env
+*.key
+secrets.txt
+
+

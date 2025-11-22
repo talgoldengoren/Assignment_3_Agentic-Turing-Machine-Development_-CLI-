@@ -1,0 +1,24 @@
+# Original Clean Input Sentence (16 words)
+CLEAN: The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within textual data.
+
+# Noisy Versions with Different Error Rates
+
+# 0% Errors (Clean)
+NOISE_0: The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within textual data.
+
+# 10% Errors (2 out of 16 words)
+NOISE_10: The artifical intelligence systm can efficiently process natural language and understand complex semantic relationships within textual data.
+
+# 20% Errors (3 out of 16 words)
+NOISE_20: The artifical inteligence systm can efficiently proces natural language and understand complex semantic relationships within textual data.
+
+# 30% Errors (5 out of 16 words)
+NOISE_30: The artifical inteligence systm can eficiently proces natural langauge and understnd complex semantic relationships within textual data.
+
+# 40% Errors (6 out of 16 words)
+NOISE_40: The artifical inteligence systm can eficiently proces naturel langauge and understnd complx semantic relatioships within textual data.
+
+# 50% Errors (8 out of 16 words)
+NOISE_50: The artifical inteligence systm can eficiently proces naturel langauge and understnd complx semantic relatioships withn textul data.
+
+
