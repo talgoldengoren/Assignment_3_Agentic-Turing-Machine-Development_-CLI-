@@ -143,7 +143,11 @@ source .venv/bin/activate  # On macOS/Linux
 pip install -r requirements.txt
 ```
 
-### STEP 4: Set OpenAI API Key
+### STEP 4: Set API Key (Choose OpenAI or Google Gemini)
+
+You can use **either** OpenAI or Google Gemini API for this project!
+
+#### Option A: OpenAI API (Original)
 
 ```bash
 # Set API key for current session
@@ -163,6 +167,30 @@ echo 'export OPENAI_API_KEY="sk-your-actual-key-here"' >> ~/.bashrc  # For bash
 # Reload configuration
 source ~/.zshrc  # or source ~/.bashrc
 ```
+
+#### Option B: Google Gemini API (Alternative - Cheaper!)
+
+```bash
+# Set API key for current session
+export GOOGLE_API_KEY='AIza-your-actual-key-here'
+
+# Verify it's set
+echo $GOOGLE_API_KEY
+
+# Install Gemini-specific requirements
+pip install -r requirements_gemini.txt
+```
+
+**📚 See Full Gemini Guide**: `GEMINI_SETUP_GUIDE.md`
+
+**Comparison:**
+| Feature | OpenAI | Google Gemini |
+|---------|--------|---------------|
+| Cost | ~$0.15/run | ~$0.05/run |
+| Scripts | `run_agent_chain.sh` | `run_agent_chain_gemini.sh` |
+| Analysis | `analyze_results.py` | `analyze_results_gemini.py` |
+
+**💡 Tip**: You can have both APIs configured and switch between them!
 
 ### STEP 5: Make Scripts Executable
 
