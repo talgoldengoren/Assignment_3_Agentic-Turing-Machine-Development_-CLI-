@@ -39,7 +39,17 @@ build/
 
 # API Keys (never commit these!)
 .env
+.env.*
 *.key
 secrets.txt
+secrets/
+*.secret
+*_secret*
+*_key*
+!*_key*.md
+
+# Shell history (may contain keys)
+.bash_history
+.zsh_history
 
 
