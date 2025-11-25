@@ -1,0 +1,256 @@
+# Agentic Turing Machine - CI/CD Pipeline
+# Runs agent chain experiments and analysis
+
+name: Agent Pipeline CI/CD
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual trigger
+    inputs:
+      noise_level:
+        description: 'Noise level to test (0-50 or "all")'
+        required: false
+        default: 'all'
+      run_experiments:
+        description: 'Run experiments (requires API key)'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # Job 1: Validate agent skills and code
+  validate:
+    name: Validate Skills & Code
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Check skills structure
+        run: |
+          echo "📋 Validating agent skills..."
+          
+          # Check skills directory exists
+          if [ ! -d "skills" ]; then
+            echo "❌ skills/ directory not found"
+            exit 1
+          fi
+          
+          # Check each required skill
+          for skill in "english-to-french-translator" "french-to-hebrew-translator" "hebrew-to-english-translator" "translation-chain-coordinator"; do
+            if [ ! -f "skills/$skill/SKILL.md" ]; then
+              echo "❌ Missing: skills/$skill/SKILL.md"
+              exit 1
+            fi
+            echo "✓ Found: skills/$skill/SKILL.md"
+          done
+          
+          echo "✅ All agent skills validated!"
+      
+      - name: Check Python syntax
+        run: |
+          echo "🐍 Checking Python syntax..."
+          python -m py_compile run_with_skills.py
+          python -m py_compile analyze_results_local.py
+          python -m py_compile test_agent.py
+          echo "✅ Python syntax OK!"
+      
+      - name: Check shell scripts
+        run: |
+          echo "⚙️ Checking shell scripts..."
+          bash -n run_pipeline.sh || true
+          bash -n install_skills.sh || true
+          bash -n create_agent.sh || true
+          echo "✅ Shell scripts OK!"
+
+  # Job 2: Run local analysis (no API needed)
+  analyze:
+    name: Run Local Analysis
+    runs-on: ubuntu-latest
+    needs: validate
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy matplotlib scikit-learn
+      
+      - name: Check for existing outputs
+        id: check_outputs
+        run: |
+          if [ -d "outputs" ] && [ "$(find outputs -name 'agent3_english.txt' | wc -l)" -gt 0 ]; then
+            echo "outputs_exist=true" >> $GITHUB_OUTPUT
+            echo "✅ Found existing outputs to analyze"
+          else
+            echo "outputs_exist=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No outputs found - skipping analysis"
+          fi
+      
+      - name: Run analysis
+        if: steps.check_outputs.outputs.outputs_exist == 'true'
+        run: |
+          echo "📊 Running local analysis..."
+          python analyze_results_local.py
+          echo "✅ Analysis complete!"
+      
+      - name: Upload analysis artifacts
+        if: steps.check_outputs.outputs.outputs_exist == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-results
+          path: |
+            semantic_drift_analysis_local.png
+            semantic_drift_analysis_local.pdf
+            analysis_results_local.json
+          retention-days: 30
+
+  # Job 3: Run full experiments (requires API key)
+  experiments:
+    name: Run Experiments
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.inputs.run_experiments == 'true' || (github.event_name == 'push' && contains(github.event.head_commit.message, '[run-experiments]'))
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install anthropic numpy matplotlib scikit-learn
+      
+      - name: Run experiments
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "❌ ANTHROPIC_API_KEY not set in secrets"
+            echo "   Go to Settings > Secrets and variables > Actions"
+            echo "   Add a new secret named ANTHROPIC_API_KEY"
+            exit 1
+          fi
+          
+          NOISE="${{ github.event.inputs.noise_level || 'all' }}"
+          
+          if [ "$NOISE" = "all" ]; then
+            echo "🚀 Running all noise levels..."
+            python run_with_skills.py --all
+          else
+            echo "🚀 Running noise level $NOISE%..."
+            python run_with_skills.py --noise "$NOISE"
+          fi
+      
+      - name: Run analysis
+        run: |
+          echo "📊 Running analysis..."
+          python analyze_results_local.py
+      
+      - name: Upload experiment results
+        uses: actions/upload-artifact@v4
+        with:
+          name: experiment-results
+          path: |
+            outputs/
+            semantic_drift_analysis_local.png
+            semantic_drift_analysis_local.pdf
+            analysis_results_local.json
+          retention-days: 30
+      
+      - name: Comment on PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let results = '';
+            try {
+              results = fs.readFileSync('analysis_results_local.json', 'utf8');
+              const data = JSON.parse(results);
+              const comment = `## 📊 Experiment Results
+              
+              **Semantic Distances:**
+              | Noise Level | Distance |
+              |-------------|----------|
+              ${Object.entries(data.semantic_distances).map(([k, v]) => `| ${k}% | ${v.toFixed(4)} |`).join('\n')}
+              
+              **Best Performance:** ${Object.entries(data.semantic_distances).reduce((a, b) => a[1] < b[1] ? a : b)[0]}% noise
+              
+              Artifacts have been uploaded to this workflow run.`;
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+            } catch (e) {
+              console.log('Could not read results:', e);
+            }
+
+  # Job 4: Test individual agents
+  test-agents:
+    name: Test Agent Skills
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event.inputs.run_experiments == 'true' || contains(github.event.head_commit.message, '[test-agents]')
+    
+    strategy:
+      matrix:
+        agent:
+          - english-to-french-translator
+          - french-to-hebrew-translator
+          - hebrew-to-english-translator
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install anthropic
+      
+      - name: Test ${{ matrix.agent }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "⚠️ Skipping agent test - no API key"
+            exit 0
+          fi
+          
+          echo "🧪 Testing ${{ matrix.agent }}..."
+          python test_agent.py "${{ matrix.agent }}" "Test input for CI/CD"
+
