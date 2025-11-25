@@ -1,0 +1,188 @@
+# Deployment Workflow
+# Deploys to various cloud platforms
+
+name: Deploy
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Deploy to GitHub Pages (documentation/results)
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: pip install numpy matplotlib scikit-learn
+      
+      - name: Generate analysis
+        run: |
+          if [ -d "outputs" ]; then
+            python analyze_results_local.py
+          fi
+      
+      - name: Prepare Pages content
+        run: |
+          mkdir -p _site
+          cp README.md _site/
+          cp CI_CD_SETUP.md _site/ 2>/dev/null || true
+          cp PIPELINE_EXECUTION.md _site/ 2>/dev/null || true
+          cp *.png _site/ 2>/dev/null || true
+          cp *.pdf _site/ 2>/dev/null || true
+          cp *.json _site/ 2>/dev/null || true
+          
+          # Create index.html
+          cat > _site/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Agentic Turing Machine</title>
+            <style>
+              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+              h1 { color: #333; }
+              img { max-width: 100%; border: 1px solid #ddd; border-radius: 8px; }
+              .card { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            </style>
+          </head>
+          <body>
+            <h1>🤖 Agentic Turing Machine</h1>
+            <p>Multi-agent translation pipeline with semantic drift analysis</p>
+            <div class="card">
+              <h2>📊 Analysis Results</h2>
+              <img src="semantic_drift_analysis_local.png" alt="Semantic Drift Analysis">
+            </div>
+            <div class="card">
+              <h2>📚 Documentation</h2>
+              <ul>
+                <li><a href="https://github.com/fouada/Assignment_3_Agentic-Turing-Machine-Development_-CLI-">GitHub Repository</a></li>
+              </ul>
+            </div>
+          </body>
+          </html>
+          EOF
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Deploy Docker to Cloud Run (Google Cloud)
+  deploy-cloud-run:
+    name: Deploy to Cloud Run
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production' || github.event_name == 'release'
+    environment: production
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Authenticate to Google Cloud
+        if: env.GCP_PROJECT_ID != ''
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Deploy to Cloud Run
+        if: env.GCP_PROJECT_ID != ''
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: agentic-turing-machine
+          region: us-central1
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      
+      - name: Skip Cloud Run (no credentials)
+        if: env.GCP_PROJECT_ID == ''
+        run: echo "⚠️ Skipping Cloud Run deployment - GCP_PROJECT_ID not configured"
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+  # Deploy to AWS ECS (optional)
+  deploy-aws:
+    name: Deploy to AWS ECS
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production' || github.event_name == 'release'
+    environment: production
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        if: env.AWS_REGION != ''
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+      
+      - name: Login to Amazon ECR
+        if: env.AWS_REGION != ''
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+      
+      - name: Skip AWS (no credentials)
+        if: env.AWS_REGION == ''
+        run: echo "⚠️ Skipping AWS deployment - credentials not configured"
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+  # Notify on deployment
+  notify:
+    name: Notify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-pages]
+    if: always()
+    
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| GitHub Pages | ${{ needs.deploy-pages.result }} |" >> $GITHUB_STEP_SUMMARY
+

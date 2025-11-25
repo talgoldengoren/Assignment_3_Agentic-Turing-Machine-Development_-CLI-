@@ -1,0 +1,55 @@
+# Docker Compose for Agentic Turing Machine
+# Supports local development and testing
+
+version: '3.8'
+
+services:
+  # Main agent pipeline service
+  agent-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agentic-turing-machine
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      # Mount outputs for persistence
+      - ./outputs:/app/outputs
+      # Mount skills for live editing
+      - ./skills:/app/skills:ro
+      # Mount analysis results
+      - ./results:/app/results
+    command: python run_with_skills.py --all
+    
+  # Analysis-only service (no API needed)
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: semantic-analyzer
+    volumes:
+      - ./outputs:/app/outputs:ro
+      - ./results:/app/results
+    command: python analyze_results_local.py
+    profiles:
+      - analysis
+
+  # Interactive development shell
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agent-dev
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - .:/app
+    command: /bin/bash
+    stdin_open: true
+    tty: true
+    profiles:
+      - dev
+
+volumes:
+  results:
+

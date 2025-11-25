@@ -1,0 +1,45 @@
+# Git
+.git
+.gitignore
+
+# GitHub
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.venv
+venv/
+ENV/
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+.cursor
+
+# Documentation (not needed in container)
+*.md
+!README.md
+
+# Test/Dev files
+*.log
+*.tmp
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Analysis outputs (mount as volume instead)
+*.png
+*.pdf
+*.json
+results/
+
