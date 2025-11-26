@@ -1,6 +1,6 @@
 # Installing Agent Skills to Claude Directory
 
-## 📍 Overview
+### 📍 Overview
 
 Claude applications (Claude Code, Claude Desktop, etc.) automatically load skills from:
 ```
@@ -11,7 +11,7 @@ This guide shows you how to install your agent skills to this directory so they'
 
 ---
 
-## 🚀 Quick Install
+### 🚀 Quick Install
 
 ### Install Skills
 ```bash
