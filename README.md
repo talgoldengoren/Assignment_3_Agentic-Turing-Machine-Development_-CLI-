@@ -106,11 +106,11 @@ streamlit run src/dashboard.py
 
 **All Noise Levels Comparison:**
 
-This visualization compares the translation flow across all tested noise levels:
+This visualization shows the baseline translation flow with 0% noise (no errors):
 
 ![All Noise Levels Flow](./assets/screenshots/all_noise_levels_flow.png)
 
-You can see how the translations change as noise increases from 0% to 50%, and how the semantic quality metrics (distance, similarity, overlap) are affected.
+This demonstrates perfect semantic preservation through the translation chain when no noise is introduced.
 
 
 The following visualization shows how the sentence transforms through each agent in the pipeline:
