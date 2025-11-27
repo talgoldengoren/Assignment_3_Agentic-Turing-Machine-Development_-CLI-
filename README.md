@@ -102,25 +102,6 @@ streamlit run src/dashboard.py
 ### 📊 Results & Visualizations
 
 
-**Translation Chain Flow:**
-
-**All Noise Levels Comparison:**
-
-This visualization shows the baseline translation flow with 0% noise (no errors):
-
-![All Noise Levels Flow](./assets/screenshots/all_noise_levels_flow.png)
-
-This demonstrates perfect semantic preservation through the translation chain when no noise is introduced.
-
-
-The following visualization shows how the sentence transforms through each agent in the pipeline:
-
-![Translation Flow](./assets/screenshots/translation_flow_visualization.png)
-
-This diagram illustrates:
-- 📝 **Original English** → 🤖 **Agent 1** → 🇫🇷 **French Translation**
-- 🇫🇷 **French** → 🤖 **Agent 2** → 🇮🇱 **Hebrew Translation** 
-- 🇮🇱 **Hebrew** → 🤖 **Agent 3** → ✅ **Final English** (Round-Trip)
 - 🔍 **Semantic comparison** between original and final outputs
 
 **Semantic Drift Analysis:**
