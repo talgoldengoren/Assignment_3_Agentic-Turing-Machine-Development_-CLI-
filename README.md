@@ -97,6 +97,40 @@ streamlit run src/dashboard.py
 
 ---
 
+---
+
+### 📊 Results & Visualizations
+
+**Semantic Drift Analysis:**
+
+The following visualization shows the results of our semantic drift analysis across different noise levels:
+
+![Semantic Drift Analysis](./assets/screenshots/semantic_drift_analysis_local.png)
+
+**Key Findings:**
+- ✅ **Robust Performance**: The system maintains semantic meaning even with 20% character-level noise
+- 📈 **Cosine Distance**: Average distance of 0.227 shows high semantic preservation
+- 🎯 **Text Similarity**: 98.9% similarity demonstrates excellent translation quality
+- 📝 **Word Overlap**: 88.9% overlap indicates strong lexical preservation
+
+**Innovation Results Summary:**
+
+| Innovation | Status | Key Metric | Result |
+|-----------|--------|------------|--------|
+| 🧠 Information Theory | ✅ Complete | Normalized MI | 0.8889 |
+| ⚡ Stochastic Resonance | ✅ Complete | SR Gain | 1.000x |
+| 🔧 Self-Healing | ✅ Complete | Effectiveness | Low (baseline) |
+| 🛡️ Adversarial Robustness | ✅ Complete | Overall Score | 72.8/100 (Grade C) |
+
+**Generated Reports:**
+- 📄 `results/information_theory_analysis.json` - Shannon entropy, mutual information, KL divergence
+- 📄 `results/stochastic_resonance_analysis.json` - SNR analysis and optimal noise detection
+- 📄 `results/self_healing_analysis.json` - Confidence-based error correction metrics
+- 📄 `results/adversarial_robustness.json` - Security vulnerability assessment
+- 📄 `results/sensitivity_analysis.json` - Bootstrap analysis and parameter sensitivity
+- 📄 `results/comparative_analysis.json` - Statistical comparisons and correlations
+
+
 ### 💎 Key Features & Capabilities
 
 **Research Capabilities:**

@@ -1,0 +1,26 @@
+{
+  "original_sentence": "The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within textual data.",
+  "final_outputs": {
+    "0": "The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within text data.",
+    "10": "The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within text data.",
+    "20": "The artificial intelligence system can efficiently process natural language and understand complex semantic relationships within text data."
+  },
+  "semantic_distances": {
+    "0": 0.22738813711075978,
+    "10": 0.22738813711075978,
+    "20": 0.22738813711075978
+  },
+  "text_similarities": {
+    "0": 0.9893238434163701,
+    "10": 0.9893238434163701,
+    "20": 0.9893238434163701
+  },
+  "word_overlaps": {
+    "0": 0.8888888888888888,
+    "10": 0.8888888888888888,
+    "20": 0.8888888888888888
+  },
+  "embedding_method": "TF-IDF (local, no API)",
+  "distance_metric": "cosine_distance",
+  "api_provider": "NONE - All local computation"
+}
