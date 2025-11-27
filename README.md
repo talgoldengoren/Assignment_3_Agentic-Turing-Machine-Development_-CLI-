@@ -104,6 +104,15 @@ streamlit run src/dashboard.py
 
 **Translation Chain Flow:**
 
+**All Noise Levels Comparison:**
+
+This visualization compares the translation flow across all tested noise levels:
+
+![All Noise Levels Flow](./assets/screenshots/all_noise_levels_flow.png)
+
+You can see how the translations change as noise increases from 0% to 50%, and how the semantic quality metrics (distance, similarity, overlap) are affected.
+
+
 The following visualization shows how the sentence transforms through each agent in the pipeline:
 
 ![Translation Flow](./assets/screenshots/translation_flow_visualization.png)
